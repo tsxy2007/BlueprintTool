@@ -6,7 +6,7 @@
 #define LOCTEXT_NAMESPACE "FBlueprintTypeActions"
 FText FBlueprintTypeActions::GetName() const
 {
-	return LOCTEXT("FBlueprintTypeActionsName","BlueprintTool Theme");
+	return LOCTEXT("FBlueprintTypeActionsName1","BlueprintTool Theme1");
 }
 
 UClass* FBlueprintTypeActions::GetSupportedClass() const

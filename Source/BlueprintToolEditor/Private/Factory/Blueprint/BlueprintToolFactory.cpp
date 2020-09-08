@@ -24,7 +24,7 @@ bool UBlueprintToolFactory::CanCreateNew() const
 
 FText UBlueprintToolFactory::GetDisplayName() const
 {
-	return LOCTEXT("BlueprintToolFactory","BlueprintData");
+	return LOCTEXT("BlueprintToolLabel", "BlueprintTool Theme");
 }
 
 #undef LOCTEXT_NAMESPACE
