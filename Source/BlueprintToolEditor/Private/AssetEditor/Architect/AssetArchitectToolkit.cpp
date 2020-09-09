@@ -10,6 +10,7 @@
 #include "Toolkits/AssetEditorToolkit.h"
 #include "BPToolArchitectEdGraph.h"
 #include "EdGraph/EdGraph.h"
+#include <SBPNodeLilstPalette.h>
 
 #define LOCTEXT_NAMESPACE "FBlueprintToolEditorToolkit"
 
@@ -198,6 +199,7 @@ TSharedRef<SDockTab> FBlueprintToolEditorToolkit::HandleTabManagerSpawnTab(const
 	}
 	else if (TabIdentifier == BlueprintToolEditorToolkit::BPNodeListID)
 	{
+		TabWidget = SNew(SBPNodeLilstPalettePalette, SharedThis(this));
 	}
 	else if (TabIdentifier == BlueprintToolEditorToolkit::ContentBrowserID)
 	{

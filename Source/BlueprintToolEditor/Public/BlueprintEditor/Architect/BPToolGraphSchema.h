@@ -13,5 +13,6 @@ class UBPToolGraphSchema : public UEdGraphSchema
 	GENERATED_UCLASS_BODY()
 
 public:
+	virtual TSharedPtr<FEdGraphSchemaAction> GetCreateCommentAction() const override;
 	void GetActionList(UEdGraph* OwnerBPGraph, TArray<TSharedPtr<FEdGraphSchemaAction> >& OutActions) const;
 };
