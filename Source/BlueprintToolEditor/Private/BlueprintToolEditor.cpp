@@ -24,10 +24,14 @@ void FBlueprintToolEditorModule::ShutdownModule()
 {
 	if (ItemDataAssetTypeActions.Num())
 	{
-		IAssetTools& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-		for (const auto& Item : ItemDataAssetTypeActions)
+		if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
 		{
-			AssetToolsModule.UnregisterAssetTypeActions(Item.ToSharedRef());
+			IAssetTools& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+
+			for (const auto& Item : ItemDataAssetTypeActions)
+			{
+				AssetToolsModule.UnregisterAssetTypeActions(Item.ToSharedRef());
+			}
 		}
 		ItemDataAssetTypeActions.Empty();
 	}

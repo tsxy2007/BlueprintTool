@@ -33,6 +33,8 @@ public class BlueprintToolEditor : ModuleRules
 				"BlueprintToolEditor/Public/Factory/Blueprint",
 				"BlueprintToolEditor/Public/Style",
 				"BlueprintToolEditor/Public/Viewport",
+				"BlueprintToolEditor/Public/Palette",
+				"BlueprintToolEditor/Public/Utils",
 			}
 			);
 			
@@ -59,6 +61,7 @@ public class BlueprintToolEditor : ModuleRules
 				"BlueprintToolRuntime",
 				"AdvancedPreviewScene",
 				"EditorStyle",
+				"GraphEditor",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

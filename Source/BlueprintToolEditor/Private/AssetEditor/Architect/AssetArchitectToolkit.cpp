@@ -6,10 +6,10 @@
 #include "IContentBrowserSingleton.h"
 #include "GraphEditor.h"
 #include "Widgets/Text/STextBlock.h"
-//#include "Architect/BPArchitectEdGraph.h"
-//#include "Palette/BlueprintNodeListPalette.h"
 #include "PropertyEditorModule.h"
 #include "Toolkits/AssetEditorToolkit.h"
+#include "BPToolArchitectEdGraph.h"
+#include "EdGraph/EdGraph.h"
 
 #define LOCTEXT_NAMESPACE "FBlueprintToolEditorToolkit"
 
@@ -97,13 +97,17 @@ void FBlueprintToolEditorToolkit::UnregisterTabSpawners(const TSharedRef<FTabMan
 
 void FBlueprintToolEditorToolkit::Initialize(UBlueprintData* InTextAsset, const EToolkitMode::Type InMode, const TSharedPtr<IToolkitHost>& InToolkitHost)
 {
-
-	
+	//创建蓝图
+	{
+		UBPToolArchitectEdGraph* Graph = NewObject<UBPToolArchitectEdGraph>(InTextAsset,UBPToolArchitectEdGraph::StaticClass(),NAME_None,RF_Transactional);
+		Graph->InitializeGraph();
+		GraphEditor = CreateBPGraphEditor(Graph);
+	}
 	PreviewViewport = SNew(SBlueprintPreviewViewport)
 		.BPEditorPtr(SharedThis(this))
 		.ObjectToEdit(InTextAsset);
 	// create tab layout
-	const TSharedRef<FTabManager::FLayout> StandaloneDefaultLayout = FTabManager::NewLayout("Standalone_MaterialEditor_Layout_v10")
+	const TSharedRef<FTabManager::FLayout> StandaloneDefaultLayout = FTabManager::NewLayout("StandaloneBPTool_Layout")
 		->AddArea
 		(
 			FTabManager::NewPrimaryArea()->SetOrientation(Orient_Vertical)
@@ -186,6 +190,11 @@ TSharedRef<SDockTab> FBlueprintToolEditorToolkit::HandleTabManagerSpawnTab(const
 	}
 	else if (TabIdentifier == BlueprintToolEditorToolkit::GraphID)
 	{
+		TabWidget = SNew(SOverlay)
+			+ SOverlay::Slot()
+			[
+				GraphEditor.ToSharedRef()
+			];
 	}
 	else if (TabIdentifier == BlueprintToolEditorToolkit::BPNodeListID)
 	{
@@ -202,6 +211,30 @@ TSharedRef<SDockTab> FBlueprintToolEditorToolkit::HandleTabManagerSpawnTab(const
 		[
 			TabWidget.ToSharedRef()
 		];
+}
+
+TSharedRef<SGraphEditor> FBlueprintToolEditorToolkit::CreateBPGraphEditor(UEdGraph* InGraph)
+{
+	FGraphAppearanceInfo AppearanceInfo;
+	AppearanceInfo.CornerText = LOCTEXT("MyGraphAppearanceInfo", "BPTool");
+
+	TSharedRef<SWidget> TitleBar = SNew(SBorder)
+		.BorderImage(FEditorStyle::GetBrush(TEXT("Graph.TitleBackground")))
+		.HAlign(HAlign_Fill)
+		[
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("MyBPTitleBar","BPToolEditor"))
+				.TextStyle(FEditorStyle::Get(),TEXT("GraphBreadcrumbButtonText"))
+			]
+		];
+	TSharedRef<SGraphEditor> GraphEditorInstance = SNew(SGraphEditor)
+		.GraphToEdit(InGraph)
+		.Appearance(AppearanceInfo)
+		.TitleBar(TitleBar);
+	return GraphEditorInstance;
 }
 
 #undef LOCTEXT_NAMESPACE
