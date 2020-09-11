@@ -1,25 +1,39 @@
 #include <BPToolGraphSchemaAction.h>
+#include "Core/BoardNode.h"
 
 UEdGraphNode* FBPToolGraphSchemaAction::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode /*= true*/)
 {
+	UEdGraphNode* ResultNode = NULL;
 
-	const FScopedTransaction Transaction(NSLOCTEXT("UnrealEd", "BPEditorNewExpression", "BPTool Editor: New Expression"));
+	// If there is a template, we actually use it
+	if (K3Node != NULL)
+	{
+		const FScopedTransaction Transaction(NSLOCTEXT("UnrealEd", "K3_AddNode", "Add Node"));
+		ParentGraph->Modify();
+		if (FromPin)
+		{
+			FromPin->Modify();
+		}
 
-	//UBlueprintData* NewExpression = BPToolSchemaUtils::CreateNewMaterialExpression(ParentGraph, MaterialExpressionClass, Location, bSelectNewNode, /*bAutoAssignResource*/true);
+		// set outer to be the graph so it doesn't go away
+		K3Node->Rename(NULL, ParentGraph);
+		ParentGraph->AddNode(K3Node, true, bSelectNewNode);
 
-	//if (NewExpression)
-	//{
-	//	if (MaterialExpressionClass == UMaterialExpressionFunctionInput::StaticClass() && FromPin)
-	//	{
-	//		// Set this to be an input of the type we dragged from
-	//		SetFunctionInputType(CastChecked<UMaterialExpressionFunctionInput>(NewExpression), UMaterialGraphSchema::GetMaterialValueType(FromPin));
-	//	}
+		K3Node->CreateNewGuid();
+		K3Node->PostPlacedNewNode();
+		K3Node->AllocateDefaultPins();
+		K3Node->AutowireNewNode(FromPin);
 
-		//NewExpression->GraphNode->AutowireNewNode(FromPin);
+		K3Node->NodePosX = Location.X;
+		K3Node->NodePosY = Location.Y;
+		//@TODO: ANIM: SNAP_GRID isn't centralized or exposed - NodeTemplate->SnapToGrid(SNAP_GRID);
 
-		//return NewExpression->GraphNode;
-	//}
+		ResultNode = K3Node;
 
-	return NULL;
+		ResultNode->SetFlags(RF_Transactional);
+
+	}
+
+	return ResultNode;
 }
 

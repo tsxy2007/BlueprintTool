@@ -22,4 +22,7 @@ struct BLUEPRINTTOOLEDITOR_API FBPToolGraphSchemaAction : public FEdGraphSchemaA
 	//~ Begin FEdGraphSchemaAction Interface
 	virtual UEdGraphNode* PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
 	//~ End FEdGraphSchemaAction Interface
+
+public:
+	class UK3Node* K3Node;
 };
