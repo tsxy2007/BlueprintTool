@@ -1,5 +1,6 @@
 #include <BPToolGraphSchemaAction.h>
 #include "Core/BoardNode.h"
+#include "UObject/UObjectGlobals.h"
 
 UEdGraphNode* FBPToolGraphSchemaAction::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode /*= true*/)
 {
@@ -15,20 +16,22 @@ UEdGraphNode* FBPToolGraphSchemaAction::PerformAction(class UEdGraph* ParentGrap
 			FromPin->Modify();
 		}
 
+
+		UK3Node* Node = DuplicateObject<UK3Node>(K3Node, ParentGraph);
 		// set outer to be the graph so it doesn't go away
-		K3Node->Rename(NULL, ParentGraph);
-		ParentGraph->AddNode(K3Node, true, bSelectNewNode);
+		Node->Rename(NULL, ParentGraph);
+		ParentGraph->AddNode(Node, true, bSelectNewNode);
 
-		K3Node->CreateNewGuid();
-		K3Node->PostPlacedNewNode();
-		K3Node->AllocateDefaultPins();
-		K3Node->AutowireNewNode(FromPin);
+		Node->CreateNewGuid();
+		Node->PostPlacedNewNode();
+		Node->AllocateDefaultPins();
+		Node->AutowireNewNode(FromPin);
 
-		K3Node->NodePosX = Location.X;
-		K3Node->NodePosY = Location.Y;
+		Node->NodePosX = Location.X;
+		Node->NodePosY = Location.Y;
 		//@TODO: ANIM: SNAP_GRID isn't centralized or exposed - NodeTemplate->SnapToGrid(SNAP_GRID);
 
-		ResultNode = K3Node;
+		ResultNode = Node;
 
 		ResultNode->SetFlags(RF_Transactional);
 

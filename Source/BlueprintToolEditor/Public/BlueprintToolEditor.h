@@ -22,4 +22,7 @@ protected:
 
 private:
 	TArray<TSharedPtr<class FAssetTypeActions_Base>> ItemDataAssetTypeActions;
+	TSharedPtr<struct FGraphPanelPinConnectionFactory>	GraphPanelPinConnectionFactory;
+	TSharedPtr<struct FGraphPanelNodeFactory>			GraphPanelNodeFactory;
+	TSharedPtr<struct FGraphPanelPinFactory>				GraphPanelPinFactory;
 };

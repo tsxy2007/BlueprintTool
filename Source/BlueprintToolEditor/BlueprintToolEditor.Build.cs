@@ -21,8 +21,6 @@ public class BlueprintToolEditor : ModuleRules
 				"BlueprintToolEditor/Public",
 				"BlueprintToolEditor/Public/AssetEditor",
 				"BlueprintToolEditor/Public/AssetEditor/Architect",
-				"BlueprintToolEditor/Public/Blueprint",
-				"BlueprintToolEditor/Public/Blueprint/Core",
 				"BlueprintToolEditor/Public/BlueprintEditor",
 				"BlueprintToolEditor/Public/BlueprintEditor/Architect",
 				"BlueprintToolEditor/Public/BlueprintEditor/ConnectionDrawingPolicy",
@@ -62,6 +60,7 @@ public class BlueprintToolEditor : ModuleRules
 				"AdvancedPreviewScene",
 				"EditorStyle",
 				"GraphEditor",
+				"ToolMenus",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

@@ -3,6 +3,8 @@
 #include "BlueprintToolEditor.h"
 #include "AssetToolsModule.h"
 #include "AssetArchitectActions.h"
+#include <BlueprintToolFactory.h>
+#include "EdGraphUtilities.h"
 
 #define LOCTEXT_NAMESPACE "FBlueprintToolEditorModule"
 
@@ -18,10 +20,19 @@ void FBlueprintToolEditorModule::StartupModule()
 		// register AI category so that AI assets can register to it
 		AssetCategoryBit = AssetToolsModule.RegisterAdvancedAssetCategory(FName(TEXT("Custom")), LOCTEXT("FBlueprintToolEditorModuleAssetCategory", "Custom"));
 	}
+	GraphPanelPinConnectionFactory = MakeShareable(new FBPToolGraphPanelPinConnectionFactory);
+	GraphPanelNodeFactory = MakeShareable(new FBPToolGraphPanelNodeFactory);
+	GraphPanelPinFactory = MakeShareable(new FBPToolGraphPanelPinFactory);
+	FEdGraphUtilities::RegisterVisualPinConnectionFactory(GraphPanelPinConnectionFactory);
+	FEdGraphUtilities::RegisterVisualNodeFactory(GraphPanelNodeFactory);
+	FEdGraphUtilities::RegisterVisualPinFactory(GraphPanelPinFactory);
 }
 
 void FBlueprintToolEditorModule::ShutdownModule()
 {
+	FEdGraphUtilities::UnregisterVisualPinConnectionFactory(GraphPanelPinConnectionFactory);
+	FEdGraphUtilities::UnregisterVisualNodeFactory(GraphPanelNodeFactory);
+	FEdGraphUtilities::UnregisterVisualPinFactory(GraphPanelPinFactory);
 	if (ItemDataAssetTypeActions.Num())
 	{
 		if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
