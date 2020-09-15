@@ -3,6 +3,10 @@
 #include <BPToolGraphSchema.h>
 #include "NodeFactory.h"
 #include <ConnectionDrawingPolicy1.h>
+#include "Core/BoardNode.h"
+#include "SK3Node.h"
+#include "SK3GrapPin.h"
+#include "KismetPins/SGraphPinNum.h"
 
 #define LOCTEXT_NAMESPACE "UBlueprintToolFactory"
 
@@ -35,21 +39,24 @@ FText UBlueprintToolFactory::GetDisplayName() const
 
 TSharedPtr<class SGraphNode> FBPToolGraphPanelNodeFactory::CreateNode(UEdGraphNode* Node) const
 {
+	if (Node->IsA<UBoardNode>())
+	{
+		return SNew(SK3Node,Cast<UBoardNode>(Node));
+	}
 	return TSharedPtr<class SGraphNode>();
 }
 
-TSharedPtr<class SGraphPin> FBPToolGraphPanelPinFactory::CreatePin(UEdGraphPin* Pin) const
+TSharedPtr<class SGraphPin> FBPToolGraphPanelPinFactory::CreatePin(UEdGraphPin* InPin) const
 {
-	TSharedPtr<class SGraphPin> NewPin;
-	if (const UBPToolGraphSchema* K3Scehma = Cast<const UBPToolGraphSchema>( Pin->GetSchema()))
+	if (const UBPToolGraphSchema* K3Scehma = Cast<const UBPToolGraphSchema>(InPin->GetSchema()))
 	{
-		NewPin = FNodeFactory::CreateK2PinWidget(Pin);
-		if (!NewPin.IsValid())
+		if (InPin->PinType.PinCategory == TEXT("float"))
 		{
-			// TODO:
+			return SNew(SGraphPinNum<float>, InPin);
 		}
+		return SNew(SBPToolGraphPin, InPin);
 	}
-	return NewPin;
+	return nullptr;
 }
 
 FConnectionDrawingPolicy* FBPToolGraphPanelPinConnectionFactory::CreateConnectionPolicy(const UEdGraphSchema* Schema, int32 InBackLayerID, int32 InFrontLayerID, float ZoomFactor, const FSlateRect& InClippingRect, FSlateWindowElementList& InDrawElements, UEdGraph* InGraphObj) const

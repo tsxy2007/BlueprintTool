@@ -4,8 +4,8 @@
 void UBoardNode::AllocateDefaultPins()
 {
 	Super::AllocateDefaultPins();
-	CreatePin(EGPD_Input, TEXT("float"), "");
-	CreatePin(EGPD_Output, TEXT("float"), "");
+	CreatePin(EGPD_Input, TEXT("float"), "in");
+	CreatePin(EGPD_Output, TEXT("float"), "out");
 }
 
 FText UBoardNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
