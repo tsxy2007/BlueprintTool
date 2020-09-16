@@ -14,6 +14,8 @@ void SK3Node::Construct(const FArguments& InArgs, UK3Node* MarkerNode)
 
 void SK3Node::UpdateGraphNode()
 {
+	SGraphNode::UpdateGraphNode();
+	return;
 	InputPins.Empty();
 	OutputPins.Empty();
 
@@ -68,6 +70,8 @@ void SK3Node::UpdateGraphNode()
 
 void SK3Node::AddPin(const TSharedRef<SGraphPin>& PinToAdd)
 {
+	SGraphNode::AddPin(PinToAdd);
+	return;
 	PinToAdd->SetOwner(SharedThis(this));
 
 	const UEdGraphPin* PinObj = PinToAdd->GetPinObj();

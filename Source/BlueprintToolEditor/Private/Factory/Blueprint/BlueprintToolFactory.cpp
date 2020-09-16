@@ -7,6 +7,8 @@
 #include "SK3Node.h"
 #include "SK3GrapPin.h"
 #include "KismetPins/SGraphPinNum.h"
+#include "KismetPins/SGraphPinBool.h"
+#include "KismetPins/SGraphPinInteger.h"
 
 #define LOCTEXT_NAMESPACE "UBlueprintToolFactory"
 
@@ -53,6 +55,18 @@ TSharedPtr<class SGraphPin> FBPToolGraphPanelPinFactory::CreatePin(UEdGraphPin* 
 		if (InPin->PinType.PinCategory == TEXT("float"))
 		{
 			return SNew(SGraphPinNum<float>, InPin);
+		}
+		else if (InPin->PinType.PinCategory == TEXT("bool"))
+		{
+			return SNew(SGraphPinBool, InPin);
+		}
+		else if (InPin->PinType.PinCategory == TEXT("int"))
+		{
+			return SNew(SGraphPinInteger, InPin);
+		}
+		else if (InPin->PinType.PinCategory == TEXT("int64"))
+		{
+			return SNew(SGraphPinNum<int64>, InPin);
 		}
 		return SNew(SBPToolGraphPin, InPin);
 	}

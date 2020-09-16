@@ -55,6 +55,30 @@ void UBPToolGraphSchema::GetActionList(UEdGraph* OwnerBPGraph, TArray<TSharedPtr
 }
 
 
+const FPinConnectionResponse UBPToolGraphSchema::CanCreateConnection(const UEdGraphPin* PinA, const UEdGraphPin* PinB) const
+{
+	const UK3Node* OwningNodeA = Cast<UK3Node>(PinA->GetOwningNodeUnchecked());
+	const UK3Node* OwningNodeB = Cast<UK3Node>(PinB->GetOwningNodeUnchecked());
+
+	if (!OwningNodeA || !OwningNodeB)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Invalid nodes"));
+	}
+	if (OwningNodeA == OwningNodeB)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Both are on the same node"));
+	}
+	if (PinA->bOrphanedPin || PinB->bOrphanedPin)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot make new connections to orphaned pin"));
+	}
+	if (PinA->PinType.PinCategory == PinB->PinType.PinCategory)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_AB, TEXT("Replace existing input connections"));
+	}
+	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("我不知道原因"));
+}
+
 void UBPToolGraphSchema::GetMakeCollectionWithSubMenu(UToolMenu* Menu)
 {
 
