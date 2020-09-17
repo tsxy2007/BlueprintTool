@@ -107,6 +107,8 @@ void FBlueprintToolEditorToolkit::Initialize(UBlueprintData* InTextAsset, const 
 	PreviewViewport = SNew(SBlueprintPreviewViewport)
 		.BPEditorPtr(SharedThis(this))
 		.ObjectToEdit(InTextAsset);
+
+	
 	// create tab layout
 	const TSharedRef<FTabManager::FLayout> StandaloneDefaultLayout = FTabManager::NewLayout("StandaloneBPTool_Layout")
 		->AddArea
@@ -179,6 +181,15 @@ void FBlueprintToolEditorToolkit::Initialize(UBlueprintData* InTextAsset, const 
 	RegenerateMenusAndToolbars();
 }
 
+
+void FBlueprintToolEditorToolkit::OnSelectedBPNodesChanged(const TSet<class UObject*>& SelectionNode)
+{
+	if (SelectionNode.Num() > 0)
+	{
+		DetailsView->SetObjects(SelectionNode.Array());
+	}
+}
+
 TSharedRef<SDockTab> FBlueprintToolEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTabArgs& Args, FName TabIdentifier)
 {
 	TSharedPtr<SWidget> TabWidget = SNullWidget::NullWidget;
@@ -188,6 +199,23 @@ TSharedRef<SDockTab> FBlueprintToolEditorToolkit::HandleTabManagerSpawnTab(const
 	}
 	else if (TabIdentifier == BlueprintToolEditorToolkit::DetailsTabId)
 	{
+		FPropertyEditorModule& EditModule = FModuleManager::Get().GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+		FDetailsViewArgs DetailsViewArgs(
+			/*bUpdateFromSelection=*/ false,
+			/*bLockable=*/ false,
+			/*bAllowSearch=*/ false,
+			FDetailsViewArgs::HideNameArea,
+			/*bHideSelectionTip=*/ true,
+			/*InNotifyHook=*/ nullptr,
+			/*InSearchInitialKeyFocus=*/ false,
+			/*InViewIdentifier=*/ NAME_None);
+		DetailsViewArgs.DefaultsOnlyVisibility = EEditDefaultsOnlyNodeVisibility::Automatic;
+		DetailsViewArgs.bShowOptions = false;
+		DetailsViewArgs.bAllowMultipleTopLevelObjects = true;
+
+		 TabWidget = DetailsView = EditModule.CreateDetailView(DetailsViewArgs);
+
 	}
 	else if (TabIdentifier == BlueprintToolEditorToolkit::GraphID)
 	{
@@ -232,10 +260,17 @@ TSharedRef<SGraphEditor> FBlueprintToolEditorToolkit::CreateBPGraphEditor(UEdGra
 				.TextStyle(FEditorStyle::Get(),TEXT("GraphBreadcrumbButtonText"))
 			]
 		];
+
+
+
+	SGraphEditor::FGraphEditorEvents InGraphEvents;
+	InGraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FBlueprintToolEditorToolkit::OnSelectedBPNodesChanged);
+		
 	TSharedRef<SGraphEditor> GraphEditorInstance = SNew(SGraphEditor)
 		.GraphToEdit(InGraph)
 		.Appearance(AppearanceInfo)
-		.TitleBar(TitleBar);
+		.TitleBar(TitleBar)
+		.GraphEvents(InGraphEvents);
 	return GraphEditorInstance;
 }
 

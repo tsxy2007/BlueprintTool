@@ -19,7 +19,13 @@ public:
 protected:
 	EAssetTypeCategories::Type AssetCategoryBit;
 #endif
+public:
+	/** Register custom property type layout */
+	void RegisterCustomPropertyTypeLayout(FName PropertyTypeName, FOnGetPropertyTypeCustomizationInstance PropertyTypeLayoutDelegate);
 
+	void RegisterPropertyTypeCustomizations();
+private:
+	TSet< FName > RegisteredPropertyTypes;
 private:
 	TArray<TSharedPtr<class FAssetTypeActions_Base>> ItemDataAssetTypeActions;
 	TSharedPtr<struct FGraphPanelPinConnectionFactory>	GraphPanelPinConnectionFactory;

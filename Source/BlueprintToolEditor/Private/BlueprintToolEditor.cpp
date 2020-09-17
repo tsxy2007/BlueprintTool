@@ -5,6 +5,7 @@
 #include "AssetArchitectActions.h"
 #include <BlueprintToolFactory.h>
 #include "EdGraphUtilities.h"
+#include <BlueprintDetailCustomization.h>
 
 #define LOCTEXT_NAMESPACE "FBlueprintToolEditorModule"
 
@@ -26,6 +27,9 @@ void FBlueprintToolEditorModule::StartupModule()
 	FEdGraphUtilities::RegisterVisualPinConnectionFactory(GraphPanelPinConnectionFactory);
 	FEdGraphUtilities::RegisterVisualNodeFactory(GraphPanelNodeFactory);
 	FEdGraphUtilities::RegisterVisualPinFactory(GraphPanelPinFactory);
+
+
+	
 }
 
 void FBlueprintToolEditorModule::ShutdownModule()
@@ -46,6 +50,36 @@ void FBlueprintToolEditorModule::ShutdownModule()
 		}
 		ItemDataAssetTypeActions.Empty();
 	}
+
+	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	for (auto It = RegisteredPropertyTypes.CreateConstIterator(); It; ++It)
+	{
+		if (It->IsValid())
+		{
+			PropertyModule.UnregisterCustomPropertyTypeLayout(*It);
+		}
+	}
+
+	PropertyModule.NotifyCustomizationModuleChanged();
+}
+
+
+void FBlueprintToolEditorModule::RegisterCustomPropertyTypeLayout(FName PropertyTypeName, FOnGetPropertyTypeCustomizationInstance PropertyTypeLayoutDelegate)
+{
+	check(PropertyTypeName != NAME_None);
+
+	RegisteredPropertyTypes.Add(PropertyTypeName);
+
+	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	PropertyModule.RegisterCustomPropertyTypeLayout(PropertyTypeName, PropertyTypeLayoutDelegate);
+}
+
+
+void FBlueprintToolEditorModule::RegisterPropertyTypeCustomizations()
+{
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	RegisterCustomPropertyTypeLayout("DescriptionBPTool", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FBlueprintVariableMappings::MakeInstance));
+	PropertyModule.NotifyCustomizationModuleChanged();
 }
 
 #undef LOCTEXT_NAMESPACE

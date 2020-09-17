@@ -21,6 +21,8 @@ public:
 
 	virtual void Initialize(UBlueprintData* InTextAsset, const EToolkitMode::Type InMode, const TSharedPtr<IToolkitHost>& InToolkitHost);
 	const TSharedPtr<SGraphEditor> GetGraphEditor() { return GraphEditor; };
+
+	void OnSelectedBPNodesChanged(const TSet<class UObject*>& SelectionNode);
 protected:
 	TSharedRef<SDockTab> HandleTabManagerSpawnTab(const FSpawnTabArgs& Args, FName TabIdentifier);
 	TSharedRef<SGraphEditor> CreateBPGraphEditor(UEdGraph* InGraph);
@@ -28,4 +30,5 @@ private:
 	UBlueprintData* BlueprintData;
 	TSharedPtr<SBlueprintPreviewViewport> PreviewViewport;
 	TSharedPtr<SGraphEditor> GraphEditor;
+	TSharedPtr<IDetailsView> DetailsView;
 };

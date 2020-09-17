@@ -12,4 +12,8 @@ public:
 
 	virtual void AllocateDefaultPins() override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = K3Node)
+		FTransform BoardGrapNode;
 };
