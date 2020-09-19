@@ -23,6 +23,31 @@ public:
 	const TSharedPtr<SGraphEditor> GetGraphEditor() { return GraphEditor; };
 
 	void OnSelectedBPNodesChanged(const TSet<class UObject*>& SelectionNode);
+	void CreateCommands();
+
+public:
+	//√¸¡Ó¡–±Ì
+private:
+	void DeleteSelectedNodes();
+	bool CanDeleteNode() const;
+
+	void CopySelectedNodes();
+	bool CanCopyNodes() const;
+
+	void PasteNodes();
+	bool CanPasteNodes() const;
+
+	void CutSelectedNodes();
+	bool CanCutNodes() const;
+
+	void DuplicateNodes();
+	bool CanDuplicateNodes() const;
+
+	void SelectAllNodes();
+	bool CanSelectAllNodes() const;
+
+	void UndoGraphAction();
+	void RedoGraphAction();
 protected:
 	TSharedRef<SDockTab> HandleTabManagerSpawnTab(const FSpawnTabArgs& Args, FName TabIdentifier);
 	TSharedRef<SGraphEditor> CreateBPGraphEditor(UEdGraph* InGraph);
@@ -31,4 +56,5 @@ private:
 	TSharedPtr<SBlueprintPreviewViewport> PreviewViewport;
 	TSharedPtr<SGraphEditor> GraphEditor;
 	TSharedPtr<IDetailsView> DetailsView;
+	TSharedPtr<FUICommandList> GraphEditorCommands;
 };

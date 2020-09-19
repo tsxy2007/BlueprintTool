@@ -61,6 +61,7 @@ public class BlueprintToolEditor : ModuleRules
 				"EditorStyle",
 				"GraphEditor",
 				"ToolMenus",
+				"ApplicationCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

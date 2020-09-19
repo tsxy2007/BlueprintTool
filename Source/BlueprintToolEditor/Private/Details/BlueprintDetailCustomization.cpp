@@ -25,7 +25,7 @@ void FBlueprintVariableMappings::CustomizeChildren(TSharedRef<IPropertyHandle> P
 		TSharedRef<IPropertyHandle> ChildHandle = PropertyHandle->GetChildHandle(ChildIndex).ToSharedRef();
 		if (ChildHandle->GetProperty())
 		{
-			if (ChildHandle->GetMetaData(TEXT("HelloWorld"))!="Hide")
+			if (ChildHandle->GetMetaData(TEXT("HelloWorld")) != "Hide")
 			{
 				IDetailGroup* DetailGroupInstance = nullptr;
 				if (DetailGroup.Contains(ChildHandle->GetMetaData(TEXT("Category"))))
@@ -37,6 +37,7 @@ void FBlueprintVariableMappings::CustomizeChildren(TSharedRef<IPropertyHandle> P
 					DetailGroupInstance = &ChildBuilder.AddGroup(*ChildHandle->GetMetaData(TEXT("Categroy")), FText::Format(LOCTEXT("Catefory1", "{0}"), FText::FromString(*ChildHandle->GetMetaData("Category"))));;
 					DetailGroup.Add(ChildHandle->GetMetaData(TEXT("Category")), DetailGroupInstance);
 				}
+
 				DetailGroupInstance->AddPropertyRow(ChildHandle);
 			}
 		}

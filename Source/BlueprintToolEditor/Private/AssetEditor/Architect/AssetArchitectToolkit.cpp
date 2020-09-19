@@ -11,6 +11,13 @@
 #include "BPToolArchitectEdGraph.h"
 #include "EdGraph/EdGraph.h"
 #include <SBPNodeLilstPalette.h>
+#include "Commands/BPToolCommands.h"
+#include "Framework/Commands/GenericCommands.h"
+#include "EdGraphUtilities.h"
+#include "HAL/PlatformApplicationMisc.h"
+#include "SNodePanel.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "BPToolGraphSchema.h"
 
 #define LOCTEXT_NAMESPACE "FBlueprintToolEditorToolkit"
 
@@ -98,11 +105,20 @@ void FBlueprintToolEditorToolkit::UnregisterTabSpawners(const TSharedRef<FTabMan
 
 void FBlueprintToolEditorToolkit::Initialize(UBlueprintData* InTextAsset, const EToolkitMode::Type InMode, const TSharedPtr<IToolkitHost>& InToolkitHost)
 {
+
 	//创建蓝图
 	{
-		UBPToolArchitectEdGraph* Graph = NewObject<UBPToolArchitectEdGraph>(InTextAsset,UBPToolArchitectEdGraph::StaticClass(),NAME_None,RF_Transactional);
-		Graph->InitializeGraph();
-		GraphEditor = CreateBPGraphEditor(Graph);
+		if (InTextAsset->BPToolGraph == nullptr)
+		{
+			InTextAsset->BPToolGraph = Cast<UBPToolArchitectEdGraph>(FBlueprintEditorUtils::CreateNewGraph(
+				InTextAsset, 
+				TEXT("BlueprintTool Tree"), 
+				UBPToolArchitectEdGraph::StaticClass(), 
+				UBPToolGraphSchema::StaticClass()));
+		}
+		UBPToolArchitectEdGraph* MyGraph = Cast<UBPToolArchitectEdGraph>(InTextAsset->BPToolGraph);
+		MyGraph->InitializeGraph();
+		GraphEditor = CreateBPGraphEditor(MyGraph);
 	}
 	PreviewViewport = SNew(SBlueprintPreviewViewport)
 		.BPEditorPtr(SharedThis(this))
@@ -184,10 +200,247 @@ void FBlueprintToolEditorToolkit::Initialize(UBlueprintData* InTextAsset, const 
 
 void FBlueprintToolEditorToolkit::OnSelectedBPNodesChanged(const TSet<class UObject*>& SelectionNode)
 {
-	if (SelectionNode.Num() > 0)
+	DetailsView->SetObjects(SelectionNode.Array());
+}
+
+
+void FBlueprintToolEditorToolkit::CreateCommands()
+{
+	FBPToolCommands::Register();
+
+	if (!GraphEditorCommands.IsValid())
 	{
-		DetailsView->SetObjects(SelectionNode.Array());
+		GraphEditorCommands = MakeShareable(new FUICommandList);
+		/*GraphEditorCommands->MapAction(FGenericCommands::Get().Rename,
+			FExecuteAction::CreateSP(this, &FBlueprintEditor::OnRenameNode),
+			FCanExecuteAction::CreateSP(this, &FBlueprintEditor::CanRenameNodes)
+		);*/
+
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Undo,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::UndoGraphAction));
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Redo,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::RedoGraphAction));
+		GraphEditorCommands->MapAction(FGenericCommands::Get().SelectAll,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::SelectAllNodes),
+			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanSelectAllNodes)
+		);
+
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Copy,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CopySelectedNodes),
+			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanCopyNodes)
+		);
+
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Paste,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::PasteNodes),
+			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanPasteNodes)
+		);
+
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Cut,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CutSelectedNodes),
+			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanCutNodes)
+		);
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Duplicate,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::DuplicateNodes),
+			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanDuplicateNodes)
+		);
 	}
+
+}
+
+
+void FBlueprintToolEditorToolkit::DeleteSelectedNodes()
+{
+	TArray<UEdGraphNode*> NodesToDelete;
+	const FGraphPanelSelectionSet SelectNodes = GraphEditor->GetSelectedNodes();
+	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectNodes); NodeIt; ++NodeIt)
+	{
+		NodesToDelete.Add(CastChecked<UEdGraphNode>(*NodeIt));
+	}
+
+	if (NodesToDelete.Num()>0)
+	{
+		for (int32 i =0 ;i<NodesToDelete.Num();++i)
+		{
+			NodesToDelete[i]->BreakAllNodeLinks();
+
+			const UEdGraphSchema* Schema = nullptr;
+			if (UEdGraph* MyGraphObj = NodesToDelete[i]->GetGraph())
+			{
+				MyGraphObj->Modify();
+				Schema = MyGraphObj->GetSchema();
+			}
+
+			NodesToDelete[i]->Modify();
+
+			if (Schema)
+			{
+				Schema->BreakNodeLinks(*NodesToDelete[i]);
+			}
+
+			NodesToDelete[i]->DestroyNode();
+		}
+	}
+}
+
+
+bool FBlueprintToolEditorToolkit::CanDeleteNode() const
+{
+	return true;
+}
+
+
+void FBlueprintToolEditorToolkit::CopySelectedNodes()
+{
+	const FGraphPanelSelectionSet SelectNodes = GraphEditor->GetSelectedNodes();
+	FString ExportedText;
+	FEdGraphUtilities::ExportNodesToText(SelectNodes, ExportedText);
+	FPlatformApplicationMisc::ClipboardCopy(*ExportedText);
+}
+
+
+bool FBlueprintToolEditorToolkit::CanCopyNodes() const
+{
+	return true;
+}
+
+
+void FBlueprintToolEditorToolkit::PasteNodes()
+{
+	const FScopedTransaction Transaction(NSLOCTEXT("BPToolNodes", "BPToolNodesPaste", "Hello Node We are paste!!"));
+
+	GraphEditor->ClearSelectionSet();
+
+	GraphEditor->GetCurrentGraph()->Modify();
+
+	FString TextToImport;
+	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
+
+	TSet<UEdGraphNode*> PasteNodes;
+	FEdGraphUtilities::ImportNodesFromText(GraphEditor->GetCurrentGraph(), TextToImport, PasteNodes);
+
+	FVector2D AvgNodePosition(0.f, 0.f);
+	for (TSet<UEdGraphNode*>::TIterator It(PasteNodes);It;++It)
+	{
+		UEdGraphNode* Node = *It;
+		AvgNodePosition.X += Node->NodePosX;
+		AvgNodePosition.Y += Node->NodePosY;
+	}
+
+	if (PasteNodes.Num() > 0)
+	{
+		float InvNumNodes = 1.f / float(PasteNodes.Num());
+		AvgNodePosition.X *= InvNumNodes;
+		AvgNodePosition.Y *= InvNumNodes;
+	}
+	const FVector2D Location = GraphEditor->GetPasteLocation();
+	for (TSet<UEdGraphNode*>::TIterator It(PasteNodes); It; ++It)
+	{
+		UEdGraphNode* Node = *It;
+		GraphEditor->SetNodeSelection(Node, true);
+
+		Node->NodePosX = (Node->NodePosX - AvgNodePosition.X) + Location.X;
+		Node->NodePosY = (Node->NodePosY - AvgNodePosition.Y) + Location.Y;
+
+		Node->SnapToGrid(SNodePanel::GetSnapGridSize());
+
+		Node->CreateNewGuid();
+
+
+		for (UEdGraphPin* Pin : Node->Pins)
+		{
+			Pin->PinId = FGuid::NewGuid();
+		}
+	}
+	GraphEditor->NotifyGraphChanged();
+}
+
+
+bool FBlueprintToolEditorToolkit::CanPasteNodes() const
+{
+	return true;
+}
+
+
+void FBlueprintToolEditorToolkit::CutSelectedNodes()
+{
+	CopySelectedNodes();
+
+	const FGraphPanelSelectionSet OldSelectedNodes = GraphEditor->GetSelectedNodes();
+
+	FGraphPanelSelectionSet RemainingNodes;
+	GraphEditor->ClearSelectionSet();
+	for (FGraphPanelSelectionSet::TConstIterator SelectedIter(OldSelectedNodes); SelectedIter; ++SelectedIter)
+	{
+		UEdGraphNode* Node = Cast<UEdGraphNode>(*SelectedIter);
+		if ((Node != nullptr)&& Node->CanDuplicateNode())
+		{
+			GraphEditor->SetNodeSelection(Node, true);
+		}
+		else
+		{
+			RemainingNodes.Add(Node);
+		}
+	}
+
+	DeleteSelectedNodes();
+
+	GraphEditor->ClearSelectionSet();
+
+	for (FGraphPanelSelectionSet::TConstIterator SelectIter(RemainingNodes);SelectIter;++SelectIter)
+	{
+		if (UEdGraphNode* Node = Cast<UEdGraphNode>(*SelectIter))
+		{
+			GraphEditor->SetNodeSelection(Node, true);
+		}
+	}
+}
+
+
+bool FBlueprintToolEditorToolkit::CanCutNodes() const
+{
+	return true;
+}
+
+
+void FBlueprintToolEditorToolkit::DuplicateNodes()
+{
+	CopySelectedNodes();
+	PasteNodes();
+}
+
+
+bool FBlueprintToolEditorToolkit::CanDuplicateNodes() const
+{
+	return CanCopyNodes()&&CanPasteNodes();
+}
+
+
+void FBlueprintToolEditorToolkit::SelectAllNodes()
+{
+	if (GraphEditor.IsValid())
+	{
+		GraphEditor->SelectAllNodes();
+	}
+}
+
+
+bool FBlueprintToolEditorToolkit::CanSelectAllNodes() const
+{
+	return GraphEditor.IsValid();
+}
+
+
+void FBlueprintToolEditorToolkit::UndoGraphAction()
+{
+	GEditor->UndoTransaction();
+	GraphEditor->NotifyGraphChanged();
+}
+
+
+void FBlueprintToolEditorToolkit::RedoGraphAction()
+{
+	GEditor->RedoTransaction();
+	GraphEditor->NotifyGraphChanged();
 }
 
 TSharedRef<SDockTab> FBlueprintToolEditorToolkit::HandleTabManagerSpawnTab(const FSpawnTabArgs& Args, FName TabIdentifier)
@@ -266,11 +519,16 @@ TSharedRef<SGraphEditor> FBlueprintToolEditorToolkit::CreateBPGraphEditor(UEdGra
 	SGraphEditor::FGraphEditorEvents InGraphEvents;
 	InGraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FBlueprintToolEditorToolkit::OnSelectedBPNodesChanged);
 		
+
+	//创建命令
+	CreateCommands();
+
 	TSharedRef<SGraphEditor> GraphEditorInstance = SNew(SGraphEditor)
 		.GraphToEdit(InGraph)
 		.Appearance(AppearanceInfo)
 		.TitleBar(TitleBar)
-		.GraphEvents(InGraphEvents);
+		.GraphEvents(InGraphEvents)
+		.AdditionalCommands(GraphEditorCommands);
 	return GraphEditorInstance;
 }
 

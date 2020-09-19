@@ -1,4 +1,5 @@
 #include "Core/BoardNode.h"
+#include "Details/Blueprint/DescriptionBPTool.h"
 
 #define LOCTEXT_NAMESPACE "BoardNode"
 void UBoardNode::AllocateDefaultPins()

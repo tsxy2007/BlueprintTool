@@ -6,6 +6,7 @@
 #include <BlueprintToolFactory.h>
 #include "EdGraphUtilities.h"
 #include <BlueprintDetailCustomization.h>
+#include <BlueprintPropertyTypeCustomization.h>
 
 #define LOCTEXT_NAMESPACE "FBlueprintToolEditorModule"
 
@@ -79,6 +80,7 @@ void FBlueprintToolEditorModule::RegisterPropertyTypeCustomizations()
 {
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	RegisterCustomPropertyTypeLayout("DescriptionBPTool", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FBlueprintVariableMappings::MakeInstance));
+	//RegisterCustomPropertyTypeLayout("BlueprintPropertyType", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FBlueprintPropertyTypeCustomization::MakeInstance));
 	PropertyModule.NotifyCustomizationModuleChanged();
 }
 
