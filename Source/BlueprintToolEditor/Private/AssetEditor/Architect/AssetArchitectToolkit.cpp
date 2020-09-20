@@ -243,6 +243,11 @@ void FBlueprintToolEditorToolkit::CreateCommands()
 			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::DuplicateNodes),
 			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanDuplicateNodes)
 		);
+
+		GraphEditorCommands->MapAction(FGenericCommands::Get().Delete,
+			FExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::DeleteSelectedNodes),
+			FCanExecuteAction::CreateSP(this, &FBlueprintToolEditorToolkit::CanDeleteNode)
+		);
 	}
 
 }
@@ -250,34 +255,27 @@ void FBlueprintToolEditorToolkit::CreateCommands()
 
 void FBlueprintToolEditorToolkit::DeleteSelectedNodes()
 {
-	TArray<UEdGraphNode*> NodesToDelete;
-	const FGraphPanelSelectionSet SelectNodes = GraphEditor->GetSelectedNodes();
-	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectNodes); NodeIt; ++NodeIt)
+	TSharedPtr<SGraphEditor> CurrentGraphEditor = GraphEditor;
+	if (!CurrentGraphEditor.IsValid())
 	{
-		NodesToDelete.Add(CastChecked<UEdGraphNode>(*NodeIt));
+		return;
 	}
 
-	if (NodesToDelete.Num()>0)
+	const FScopedTransaction Transaction(FGenericCommands::Get().Delete->GetDescription());
+	CurrentGraphEditor->GetCurrentGraph()->Modify();
+
+	const FGraphPanelSelectionSet SelectedNodes = CurrentGraphEditor->GetSelectedNodes();
+	CurrentGraphEditor->ClearSelectionSet();
+
+	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectedNodes); NodeIt; ++NodeIt)
 	{
-		for (int32 i =0 ;i<NodesToDelete.Num();++i)
+		if (UEdGraphNode* Node = Cast<UEdGraphNode>(*NodeIt))
 		{
-			NodesToDelete[i]->BreakAllNodeLinks();
-
-			const UEdGraphSchema* Schema = nullptr;
-			if (UEdGraph* MyGraphObj = NodesToDelete[i]->GetGraph())
+			if (Node->CanUserDeleteNode())
 			{
-				MyGraphObj->Modify();
-				Schema = MyGraphObj->GetSchema();
+				Node->Modify();
+				Node->DestroyNode();
 			}
-
-			NodesToDelete[i]->Modify();
-
-			if (Schema)
-			{
-				Schema->BreakNodeLinks(*NodesToDelete[i]);
-			}
-
-			NodesToDelete[i]->DestroyNode();
 		}
 	}
 }
