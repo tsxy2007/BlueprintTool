@@ -57,6 +57,7 @@ public class BlueprintToolEditor : ModuleRules
 				"UnrealEd",
 				"AssetTools",
 				"BlueprintToolRuntime",
+				"BlueprintToolCode",
 				"AdvancedPreviewScene",
 				"EditorStyle",
 				"GraphEditor",

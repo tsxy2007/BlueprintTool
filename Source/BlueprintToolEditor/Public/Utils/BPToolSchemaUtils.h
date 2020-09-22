@@ -5,17 +5,22 @@
 struct FBPToolSchemaUtils
 {
 	template<typename T, typename TN>
-	static TSharedPtr<FEdGraphSchemaAction> CreateAction(FString Title, FString ToolTip, UEdGraph* BPOwner)
+	static TSharedPtr<FEdGraphSchemaAction> CreateAction(FString Title,FString InCategory, FString ToolTip, UEdGraph* BPOwner,UField* Struct)
 	{
 		const FText MenuDesc = FText::FromString(Title);
-		const FText Category = FText::FromString("BPTool");
+		const FText Category = InCategory.IsEmpty() ? FText::FromString("BPTool") : FText::FromString(InCategory);
 		const FText TooltipText = FText::FromString(ToolTip);
-		TSharedPtr<T> NewNodeAction(new T(
-			Category,
-			MenuDesc,
-			TooltipText,
-			0));
+		TSharedPtr<T> NewNodeAction(new T(Category,MenuDesc,TooltipText,0));
 		NewNodeAction->K3Node = NewObject<TN>(BPOwner);
+
+		if (Cast<UFunction>(Struct))
+		{
+			NewNodeAction->K3Node->Function = Struct;
+		}
+		else if (CastField<FField>(Struct))
+		{
+		}
+
 		return NewNodeAction;
 	}
 };

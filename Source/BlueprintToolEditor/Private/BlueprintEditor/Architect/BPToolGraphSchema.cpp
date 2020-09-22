@@ -6,6 +6,7 @@
 #include "EdGraph/EdGraphNode.h"
 #include "ToolMenus/Public/ToolMenuEntry.h"
 #include <BPToolSchemaUtils.h>
+#include "SimpleCode.h"
 
 #define LOCTEXT_NAMESPACE "BPToolGraphSchema"
 
@@ -51,7 +52,37 @@ void UBPToolGraphSchema::GetContextMenuActions(class UToolMenu* Menu, class UGra
 
 void UBPToolGraphSchema::GetActionList(UEdGraph* OwnerBPGraph, TArray<TSharedPtr<FEdGraphSchemaAction> >& OutActions) const
 {
-	OutActions.Add(FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(TEXT("Board"), TEXT("Board Tooltip"), OwnerBPGraph));
+
+	TArray<UClass*> CodeClassArray;
+	GetDerivedClasses(USimpleCode::StaticClass(), CodeClassArray, false);
+
+	for (UClass* TmpCode : CodeClassArray)
+	{
+		for (TFieldIterator<UFunction> i(TmpCode); i; ++i)
+		{
+			UFunction* Func = *i;
+			if (Func->GetMetaData("CodeType") == "Describe" || Func->GetMetaData("CodeType") == "PureDescribe")
+			{
+				FBPToolSchemaUtils::CreateAction<UFunctionGrapNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph, OutActions, Func);
+			}
+			else if (Func->GetMetaData("CodeType") == "Event")
+			{
+				FBPToolSchemaUtils::CreateAction<UEventNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph, OutActions, Func);
+			}
+		}
+
+		for (TFieldIterator<UProperty> i(TmpCode); i; ++i)
+		{
+			UProperty* Prop = *i;
+			if (Prop)
+			{
+				FBPToolSchemaUtils::CreateAction<UFunctionGrapNode>(Prop->GetName(), Prop->GetMetaData("Group"), Prop->GetToolTipText(), OwnerBPGraph, OutActions, Prop);
+			}
+		}
+	}
+
+	//初始化变量
+	InitVariable(OwnerBPGraph, OutActions);
 }
 
 
