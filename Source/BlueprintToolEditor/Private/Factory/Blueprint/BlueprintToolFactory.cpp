@@ -39,11 +39,11 @@ FText UBlueprintToolFactory::GetDisplayName() const
 
 /// ///////////////////////////////////////////////////////////////////////////////////////////////
 
-TSharedPtr<class SGraphNode> FBPToolGraphPanelNodeFactory::CreateNode(UEdGraphNode* Node) const
+TSharedPtr<SGraphNode> FBPToolGraphPanelNodeFactory::CreateNode(UEdGraphNode* Node) const
 {
-	if (Node->IsA<UBoardNode>())
+	if (Node->IsA<UK3Node>())
 	{
-		return SNew(SK3Node,Cast<UBoardNode>(Node));
+		return SNew(SK3Node,Cast<UK3Node>(Node));
 	}
 	return TSharedPtr<class SGraphNode>();
 }
@@ -68,7 +68,7 @@ TSharedPtr<class SGraphPin> FBPToolGraphPanelPinFactory::CreatePin(UEdGraphPin* 
 		{
 			return SNew(SGraphPinNum<int64>, InPin);
 		}
-		return SNew(SBPToolGraphPin, InPin);
+		return FNodeFactory::CreateK2PinWidget(InPin);
 	}
 	return nullptr;
 }

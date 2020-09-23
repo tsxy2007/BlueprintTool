@@ -77,7 +77,7 @@ void UBPToolGraphSchema::GetActionList(UEdGraph* OwnerBPGraph, TArray<TSharedPtr
 
 		for (TFieldIterator<FProperty> i(TmpCode); i; ++i)
 		{
-			UProperty* Prop = *i;
+			FProperty* Prop = *i;
 			if (Prop)
 			{
 				TSharedPtr<FBPToolGraphSchemaAction> Action = FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(Prop->GetName(), Prop->GetMetaData("Group"), Prop->GetToolTipText().ToString(), OwnerBPGraph);

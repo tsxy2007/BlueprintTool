@@ -38,6 +38,13 @@ void UK3Node::AllocateDefaultPins()
 	}
 }
 
+
+FText UK3Node::GetNodeTitle(ENodeTitleType::Type Type) const
+{
+	UK3Node* Node = const_cast<UK3Node*>(this);
+	return Node->GetNodeTitleText();
+}
+
 FText UK3Node::GetNodeTitleText()
 {
 	if (!NodeTitle.IsEmpty())
