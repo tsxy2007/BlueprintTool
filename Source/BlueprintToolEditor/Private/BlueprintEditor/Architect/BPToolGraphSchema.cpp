@@ -61,28 +61,32 @@ void UBPToolGraphSchema::GetActionList(UEdGraph* OwnerBPGraph, TArray<TSharedPtr
 		for (TFieldIterator<UFunction> i(TmpCode); i; ++i)
 		{
 			UFunction* Func = *i;
-			if (Func->GetMetaData("CodeType") == "Describe" || Func->GetMetaData("CodeType") == "PureDescribe")
-			{
-				FBPToolSchemaUtils::CreateAction<UFunctionGrapNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph, OutActions, Func);
-			}
-			else if (Func->GetMetaData("CodeType") == "Event")
-			{
-				FBPToolSchemaUtils::CreateAction<UEventNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph, OutActions, Func);
-			}
+			TSharedPtr<FBPToolGraphSchemaAction> Action = FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText().ToString(), OwnerBPGraph);
+			Action->K3Node->Function = Func;
+			OutActions.Add(Action);
+			//if (Func->GetMetaData("CodeType") == "Describe" || Func->GetMetaData("CodeType") == "PureDescribe")
+			//{
+			//	TSharedPtr<FEdGraphSchemaAction> Action = FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph);
+			//	OutActions.Add(Action);
+			//}
+			//else if (Func->GetMetaData("CodeType") == "Event")
+			//{
+			//	//FBPToolSchemaUtils::CreateAction<UEventNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph, OutActions, Func);
+			//}
 		}
 
-		for (TFieldIterator<UProperty> i(TmpCode); i; ++i)
+		for (TFieldIterator<FProperty> i(TmpCode); i; ++i)
 		{
 			UProperty* Prop = *i;
 			if (Prop)
 			{
-				FBPToolSchemaUtils::CreateAction<UFunctionGrapNode>(Prop->GetName(), Prop->GetMetaData("Group"), Prop->GetToolTipText(), OwnerBPGraph, OutActions, Prop);
+				TSharedPtr<FBPToolGraphSchemaAction> Action = FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(Prop->GetName(), Prop->GetMetaData("Group"), Prop->GetToolTipText().ToString(), OwnerBPGraph);
+				Action->K3Node->Property = Prop;
+				OutActions.Add(Action);
+				//FBPToolSchemaUtils::CreateAction<UFunctionGrapNode>(Prop->GetName(), Prop->GetMetaData("Group"), Prop->GetToolTipText(), OwnerBPGraph, OutActions, Prop);
 			}
 		}
 	}
-
-	//初始化变量
-	InitVariable(OwnerBPGraph, OutActions);
 }
 
 
