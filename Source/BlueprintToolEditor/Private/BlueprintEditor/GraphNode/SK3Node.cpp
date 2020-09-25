@@ -14,8 +14,8 @@ void SK3Node::Construct(const FArguments& InArgs, UK3Node* MarkerNode)
 
 void SK3Node::UpdateGraphNode()
 {
-	/*SGraphNode::UpdateGraphNode();
-	return;*/
+	SGraphNode::UpdateGraphNode();
+	return;
 	InputPins.Empty();
 	OutputPins.Empty();
 

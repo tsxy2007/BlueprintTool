@@ -17,7 +17,8 @@ public:
 	virtual FText GetNodeTitle(ENodeTitleType::Type Type) const override;
 
 	FText GetNodeTitleText();
-
+private:
+	void CreatePinType(FProperty* Type, EEdGraphPinDirection EdGraphPinDirection);
 public:
 	UPROPERTY()
 	UFunction* Function;

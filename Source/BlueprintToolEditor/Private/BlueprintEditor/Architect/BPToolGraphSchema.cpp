@@ -19,13 +19,35 @@ UBPToolGraphSchema::UBPToolGraphSchema(const FObjectInitializer& ObjectInitializ
 
 void UBPToolGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
-	TSharedPtr<FBPToolGraphSchemaAction> NewNodeAction(new FBPToolGraphSchemaAction(
-		LOCTEXT("A", "Grap Node"),
-		LOCTEXT("Desc", "BoardNode"),
-		LOCTEXT("NewGraphText", "Add a Node"),
-		0));
-	NewNodeAction->K3Node = NewObject<UBoardNode>(ContextMenuBuilder.OwnerOfTemporaries);
-	ContextMenuBuilder.AddAction(NewNodeAction);
+	TArray<UClass*> CodeClassArray;
+	GetDerivedClasses(USimpleCode::StaticClass(), CodeClassArray, false);
+
+	auto Func = [ContextMenuBuilder](const FText& Name, const FText& Category,const FText& Tooltips) -> TSharedPtr<FBPToolGraphSchemaAction>
+	{
+		TSharedPtr<FBPToolGraphSchemaAction> NewNodeAction(new FBPToolGraphSchemaAction(
+			Category,
+			Name,
+			Tooltips,
+			0));
+		NewNodeAction->K3Node = NewObject<UBoardNode>(ContextMenuBuilder.OwnerOfTemporaries);
+		return NewNodeAction;
+	};
+
+	for (UClass* TmpCode : CodeClassArray)
+	{
+		for (TFieldIterator<UFunction> i(TmpCode); i; ++i)
+		{
+			TSharedPtr<FBPToolGraphSchemaAction> NewNodeAction = Func(FText::FromString(i->GetName()),FText::FromString(i->GetMetaData("Group")), i->GetToolTipText());
+			NewNodeAction->K3Node->Function = *i;
+			ContextMenuBuilder.AddAction(NewNodeAction);
+		}
+		for (TFieldIterator<FProperty> i(TmpCode); i; ++i)
+		{
+			TSharedPtr<FBPToolGraphSchemaAction> NewNodeAction = Func(FText::FromString(i->GetName()), FText::FromString(i->GetMetaData("Group")), i->GetToolTipText());
+			NewNodeAction->K3Node->Property = *i;
+			ContextMenuBuilder.AddAction(NewNodeAction);
+		}
+	}
 }
 
 TSharedPtr<FEdGraphSchemaAction> UBPToolGraphSchema::GetCreateCommentAction() const
@@ -36,10 +58,7 @@ TSharedPtr<FEdGraphSchemaAction> UBPToolGraphSchema::GetCreateCommentAction() co
 
 void UBPToolGraphSchema::GetContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const
 {
-	
 	FToolMenuSection& NewSection = Menu->AddSection("BPToolGraphSchema", LOCTEXT("", ""));
-	FToolMenuEntry Args;
-
 	NewSection.AddSubMenu(
 		"MakeCollectionWith",
 		NSLOCTEXT("ReferenceViewerSchema", "MakeCollectionWithTitle", "Make Collection with"),
@@ -64,15 +83,6 @@ void UBPToolGraphSchema::GetActionList(UEdGraph* OwnerBPGraph, TArray<TSharedPtr
 			TSharedPtr<FBPToolGraphSchemaAction> Action = FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText().ToString(), OwnerBPGraph);
 			Action->K3Node->Function = Func;
 			OutActions.Add(Action);
-			//if (Func->GetMetaData("CodeType") == "Describe" || Func->GetMetaData("CodeType") == "PureDescribe")
-			//{
-			//	TSharedPtr<FEdGraphSchemaAction> Action = FBPToolSchemaUtils::CreateAction<FBPToolGraphSchemaAction, UBoardNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph);
-			//	OutActions.Add(Action);
-			//}
-			//else if (Func->GetMetaData("CodeType") == "Event")
-			//{
-			//	//FBPToolSchemaUtils::CreateAction<UEventNode>(Func->GetName(), Func->GetMetaData("Group"), Func->GetToolTipText(), OwnerBPGraph, OutActions, Func);
-			//}
 		}
 
 		for (TFieldIterator<FProperty> i(TmpCode); i; ++i)
